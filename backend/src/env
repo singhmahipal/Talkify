@@ -1,0 +1,8 @@
+PORT=8080
+MONGO_URI=mongodb+srv://saball420hai:5xbRHECysu3KuFkc@cluster0.fzj2kvs.mongodb.net/talkify_db?retryWrites=true&w=majority&appName=Cluster0
+
+STREAM_API_KEY=6h7jsf6ekkgc
+STREAM_API_SECRET=rgza8hchuwa772g5cr9h7x3633jxvgjrtaakqpxpvcqf2ms6ecub8ryr5tx9ytp4
+
+JWT_SECRET_KEY=mVYI/T3SqE7NoA6uO1JP9MbiZdpKbbimrBQbWZFA6xc=
+
