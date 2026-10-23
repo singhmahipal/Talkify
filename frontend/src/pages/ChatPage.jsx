@@ -27,7 +27,12 @@ const ChatPage = () => {
 
   const { authUser } = useAuthUser();
 
-  const { data: tokenData, isError: tokenError, error: tokenErrorObject } = useQuery({
+  const {
+    data: tokenData,
+    isError: tokenError,
+    error: tokenErrorObject,
+    isLoading: isTokenLoading,
+  } = useQuery({
     queryKey: ["streamToken"],
     queryFn: getStreamToken,
     enabled: !!authUser,
@@ -42,9 +47,8 @@ const ChatPage = () => {
         return;
       }
 
-      if (!authUser || !tokenData?.token || !targetUserId) {
-        console.log("Missing prerequisites:", { authUser, tokenData, targetUserId });
-        setLoading(false);
+      // Still waiting for authUser, token query, or targetUserId — keep showing loader
+      if (!authUser || !targetUserId || isTokenLoading || !tokenData?.token) {
         return;
       }
 
@@ -73,7 +77,7 @@ const ChatPage = () => {
     };
 
     initChat();
-  }, [authUser, tokenData, targetUserId, tokenError, tokenErrorObject]);
+  }, [authUser, tokenData, targetUserId, tokenError, tokenErrorObject, isTokenLoading]);
 
   const handleVideoCall = () => {
     if (!channel) return;
@@ -82,9 +86,9 @@ const ChatPage = () => {
     toast.success("Video call link sent!");
   };
 
-  if (loading) return <ChatLoader />;
-  if (tokenError) return <div>Error loading chat. Try again later.</div>;
-  if (!chatClient || !channel) return <div>Unable to initialize chat.</div>;
+  if (loading || isTokenLoading) return <ChatLoader />;
+  if (tokenError) return <ChatLoader />;
+  if (!chatClient || !channel) return <ChatLoader />;
 
   return (
     <div className="h-[93vh]">
