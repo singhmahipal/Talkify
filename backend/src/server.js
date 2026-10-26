@@ -9,6 +9,7 @@ import userRoutes from "./routes/user.route.js";
 import chatRoutes from "./routes/chat.route.js";
 
 import { connectDB } from "./lib/db.js";
+import { migrateLegacyAvatars } from "./lib/stream.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -37,7 +38,8 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
-  connectDB();
+  await connectDB();
+  await migrateLegacyAvatars();
 });
