@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { acceptFriendRequest, getFriendRequests } from "../lib/api";
 import { BellIcon, ClockIcon, MessageSquareIcon, UserCheckIcon } from "lucide-react";
 import NoNotificationsFound from "../components/NoNotificationsFound";
+import { getAvatarUrl, handleImageError } from "../lib/utils";
 
 const NotificationsPage = () => {
   const queryClient = useQueryClient();
@@ -51,7 +52,11 @@ const NotificationsPage = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="avatar w-14 h-14 rounded-full bg-base-300">
-                              <img src={request.sender.profilePic} alt={request.sender.fullName} />
+                              <img
+                                src={getAvatarUrl(request.sender.profilePic, request.sender.fullName)}
+                                alt={request.sender.fullName}
+                                onError={(e) => handleImageError(e, request.sender.fullName)}
+                              />
                             </div>
                             <div>
                               <h3 className="font-semibold">{request.sender.fullName}</h3>
@@ -96,8 +101,9 @@ const NotificationsPage = () => {
                         <div className="flex items-start gap-3">
                           <div className="avatar mt-1 size-10 rounded-full">
                             <img
-                              src={notification.recipient.profilePic}
+                              src={getAvatarUrl(notification.recipient.profilePic, notification.recipient.fullName)}
                               alt={notification.recipient.fullName}
+                              onError={(e) => handleImageError(e, notification.recipient.fullName)}
                             />
                           </div>
                           <div className="flex-1">

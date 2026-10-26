@@ -1,6 +1,17 @@
 import User from "../models/User.js";
 import FriendRequest from "../models/FriendRequest.js";
 
+const sanitizeUser = (user) => {
+  if (!user) return user;
+  const userObj = user.toObject ? user.toObject() : { ...user };
+  if (userObj.profilePic && userObj.profilePic.includes("avatar.iran.liara.run")) {
+    const match = userObj.profilePic.match(/\/(\d+)\.png/);
+    const seed = match ? match[1] : encodeURIComponent(userObj.fullName || "user");
+    userObj.profilePic = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+  }
+  return userObj;
+};
+
 export async function getRecommendedUsers(req, res) {
   try {
     const currentUserId = req.user.id;
@@ -13,7 +24,7 @@ export async function getRecommendedUsers(req, res) {
         { isOnboarded: true },
       ],
     });
-    res.status(200).json(recommendedUsers);
+    res.status(200).json(recommendedUsers.map(sanitizeUser));
   } catch (error) {
     console.error("Error in getRecommendedUsers controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -26,7 +37,8 @@ export async function getMyFriends(req, res) {
       .select("friends")
       .populate("friends", "fullName profilePic nativeLanguage learningLanguage");
 
-    res.status(200).json(user.friends);
+    const sanitizedFriends = (user.friends || []).map(sanitizeUser);
+    res.status(200).json(sanitizedFriends);
   } catch (error) {
     console.error("Error in getMyFriends controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -126,7 +138,19 @@ export async function getFriendRequests(req, res) {
       status: "accepted",
     }).populate("recipient", "fullName profilePic");
 
-    res.status(200).json({ incomingReqs, acceptedReqs });
+    const sanitizedIncoming = incomingReqs.map((reqItem) => {
+      const obj = reqItem.toObject ? reqItem.toObject() : { ...reqItem };
+      if (obj.sender) obj.sender = sanitizeUser(obj.sender);
+      return obj;
+    });
+
+    const sanitizedAccepted = acceptedReqs.map((reqItem) => {
+      const obj = reqItem.toObject ? reqItem.toObject() : { ...reqItem };
+      if (obj.recipient) obj.recipient = sanitizeUser(obj.recipient);
+      return obj;
+    });
+
+    res.status(200).json({ incomingReqs: sanitizedIncoming, acceptedReqs: sanitizedAccepted });
   } catch (error) {
     console.log("Error in getPendingFriendRequests controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });
@@ -140,7 +164,13 @@ export async function getOutgoingFriendReqs(req, res) {
       status: "pending",
     }).populate("recipient", "fullName profilePic nativeLanguage learningLanguage");
 
-    res.status(200).json(outgoingRequests);
+    const sanitizedOutgoing = outgoingRequests.map((reqItem) => {
+      const obj = reqItem.toObject ? reqItem.toObject() : { ...reqItem };
+      if (obj.recipient) obj.recipient = sanitizeUser(obj.recipient);
+      return obj;
+    });
+
+    res.status(200).json(sanitizedOutgoing);
   } catch (error) {
     console.log("Error in getOutgoingFriendReqs controller", error.message);
     res.status(500).json({ message: "Internal Server Error" });

@@ -25,8 +25,8 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "Email already exists, please use a diffrent one" });
     }
 
-    const idx = Math.floor(Math.random() * 100) + 1; // generate a num between 1-100
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const idx = Math.floor(Math.random() * 1000) + 1;
+    const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${idx}`;
 
     const newUser = await User.create({
       email,
@@ -77,6 +77,13 @@ export async function login(req, res) {
 
     const isPasswordCorrect = await user.matchPassword(password);
     if (!isPasswordCorrect) return res.status(401).json({ message: "Invalid email or password" });
+
+    if (user.profilePic && user.profilePic.includes("avatar.iran.liara.run")) {
+      const match = user.profilePic.match(/\/(\d+)\.png/);
+      const seed = match ? match[1] : user.fullName;
+      user.profilePic = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+      await user.save();
+    }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "7d",

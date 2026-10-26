@@ -18,6 +18,7 @@ import {
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import toast from "react-hot-toast";
 import PageLoader from "../components/PageLoader";
+import { getAvatarUrl } from "../lib/utils";
 
 const STREAM_API_KEY = import.meta.env.VITE_STREAM_API_KEY;
 
@@ -37,7 +38,7 @@ const CallPage = () => {
 
   useEffect(() => {
     const initCall = async () => {
-      if (!tokenData.token || !authUser || !callId) return;
+      if (!tokenData?.token || !authUser || !callId) return;
 
       try {
         console.log("Initializing Stream video client...");
@@ -45,7 +46,7 @@ const CallPage = () => {
         const user = {
           id: authUser._id,
           name: authUser.fullName,
-          image: authUser.profilePic,
+          image: getAvatarUrl(authUser.profilePic, authUser.fullName),
         };
 
         const videoClient = new StreamVideoClient({

@@ -3,8 +3,9 @@ import useAuthUser from "../hooks/useAuthUser";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { completeOnboarding } from "../lib/api";
-import { LoaderIcon, MapPinIcon, ShipWheelIcon, ShuffleIcon } from "lucide-react";
+import { CameraIcon, LoaderIcon, MapPinIcon, ShipWheelIcon, ShuffleIcon } from "lucide-react";
 import { LANGUAGES } from "../constants";
+import { getAvatarUrl, handleImageError } from "../lib/utils";
 
 const OnboardingPage = () => {
   const { authUser } = useAuthUser();
@@ -38,8 +39,8 @@ const OnboardingPage = () => {
   };
 
   const handleRandomAvatar = () => {
-    const idx = Math.floor(Math.random() * 100) + 1; // 1-100 included
-    const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
+    const idx = Math.floor(Math.random() * 1000) + 1;
+    const randomAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${idx}`;
 
     setFormState({ ...formState, profilePic: randomAvatar });
     toast.success("Random profile picture generated!");
@@ -58,9 +59,10 @@ const OnboardingPage = () => {
               <div className="size-32 rounded-full bg-base-300 overflow-hidden">
                 {formState.profilePic ? (
                   <img
-                    src={formState.profilePic}
+                    src={getAvatarUrl(formState.profilePic, formState.fullName)}
                     alt="Profile Preview"
                     className="w-full h-full object-cover"
+                    onError={(e) => handleImageError(e, formState.fullName)}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
