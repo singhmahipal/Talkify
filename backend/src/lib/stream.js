@@ -29,6 +29,18 @@ export const generateStreamToken = (userId) => {
   }
 };
 
+export const ensureChannelConfig = async () => {
+  try {
+    const messagingType = await streamClient.getChannelType("messaging");
+    if (!messagingType.polls) {
+      await streamClient.updateChannelType("messaging", { polls: true });
+      console.log("Stream: Enabled polls for 'messaging' channel type");
+    }
+  } catch (error) {
+    console.error("Error ensuring Stream channel config:", error.message);
+  }
+};
+
 export const migrateLegacyAvatars = async () => {
   try {
     const User = (await import("../models/User.js")).default;
