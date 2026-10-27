@@ -4,13 +4,16 @@ import useAuthUser from "../hooks/useAuthUser";
 import { useQuery } from "@tanstack/react-query";
 import { getStreamToken } from "../lib/api";
 import {
+  AttachmentSelector,
   Avatar as StreamAvatar,
   Channel,
   ChannelHeader,
   Chat,
+  DefaultAttachmentSelectorComponents,
   MessageInput,
   MessageList,
   Thread,
+  useChannelStateContext,
   Window,
 } from "stream-chat-react";
 import { StreamChat } from "stream-chat";
@@ -25,6 +28,58 @@ const CustomChatAvatar = (props) => {
   const sanitizedImage = getAvatarUrl(props.image, props.name);
   return <StreamAvatar {...props} image={sanitizedImage} />;
 };
+
+const CustomLocationButton = ({ closeMenu }) => {
+  const { channel } = useChannelStateContext("CustomLocationButton");
+
+  const handleShareLocation = () => {
+    closeMenu();
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+    const toastId = toast.loading("Getting your location...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const mapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        channel.sendMessage({
+          text: `📍 Shared Location: ${mapsUrl}`,
+        });
+        toast.success("Location shared!", { id: toastId });
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        toast.error("Could not retrieve your location. Check browser permissions.", { id: toastId });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  return (
+    <button
+      type="button"
+      className="str-chat__dialog-menu__button str-chat__attachment-selector-actions-menu__button str-chat__attachment-selector-actions-menu__add-location-button"
+      onClick={handleShareLocation}
+    >
+      <div className="str-chat__dialog-menu__button-icon" />
+      <div className="str-chat__dialog-menu__button-text">Location</div>
+    </button>
+  );
+};
+
+const customAttachmentActions = [
+  { ActionButton: DefaultAttachmentSelectorComponents.File, type: "uploadFile" },
+  { ActionButton: DefaultAttachmentSelectorComponents.Poll, type: "createPoll" },
+  { ActionButton: CustomLocationButton, type: "addLocation" },
+];
+
+const CustomAttachmentSelector = (props) => (
+  <AttachmentSelector
+    {...props}
+    attachmentSelectorActionSet={customAttachmentActions}
+  />
+);
 
 const ChatPage = () => {
   const { id: targetUserId } = useParams();
@@ -118,7 +173,11 @@ const ChatPage = () => {
   return (
     <div className="h-[93vh]">
       <Chat client={chatClient}>
-        <Channel channel={channel} Avatar={CustomChatAvatar}>
+        <Channel
+          channel={channel}
+          Avatar={CustomChatAvatar}
+          AttachmentSelector={CustomAttachmentSelector}
+        >
           <div className="w-full relative">
             <CallButton handleVideoCall={handleVideoCall} />
             <Window>
