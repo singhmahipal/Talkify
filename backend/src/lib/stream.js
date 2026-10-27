@@ -32,9 +32,13 @@ export const generateStreamToken = (userId) => {
 export const ensureChannelConfig = async () => {
   try {
     const messagingType = await streamClient.getChannelType("messaging");
-    if (!messagingType.polls) {
-      await streamClient.updateChannelType("messaging", { polls: true });
-      console.log("Stream: Enabled polls for 'messaging' channel type");
+    const updates = {};
+    if (!messagingType.polls) updates.polls = true;
+    if (!messagingType.shared_locations) updates.shared_locations = true;
+
+    if (Object.keys(updates).length > 0) {
+      await streamClient.updateChannelType("messaging", updates);
+      console.log("Stream: Enabled channel features for 'messaging':", Object.keys(updates));
     }
   } catch (error) {
     console.error("Error ensuring Stream channel config:", error.message);
